@@ -39,14 +39,39 @@ const fakeLayout = {
   openRightbar: (a, b) => calls.push(['openRightbar', a, b]),
 };
 const fakeWorkspace = {
-  startSession: () => calls.push(['startSession']),
+  startSession: (workspaceId) => calls.push(['startSession', workspaceId]),
   pickDirectory: async () => 'C:/picked/dir',
+  openSession: (id) => calls.push(['openSession', id]),
 };
-const fakeSessions = { open: (id) => calls.push(['open', id]) };
+// The sessions service has no open(): picking a Session must go through uiWorkspace.
+// create() is the one sessions-service call we do use, to build the new blank explicitly.
+const fakeSessions = {
+  open: () => { throw new Error('sessions.open must not be used'); },
+  create: async (opts) => {
+    calls.push(['create', opts]);
+    return 's-new-id';
+  },
+};
+
+// Minimal stateful React stand-in: one hook array for the page component, and
+// a render loop that repeats passes until a click's setState settles.
+const hookState = [];
+let hookCursor = 0;
+let pendingState = false;
 
 const React = {
   createElement: (type, props, ...children) => ({ type, props: { ...(props || {}), children } }),
-  useState: (initial) => [typeof initial === 'function' ? initial() : initial, () => {}],
+  useState(initial) {
+    const index = hookCursor++;
+    if (hookState.length <= index) hookState[index] = typeof initial === 'function' ? initial() : initial;
+    return [
+      hookState[index],
+      (next) => {
+        hookState[index] = typeof next === 'function' ? next(hookState[index]) : next;
+        pendingState = true;
+      },
+    ];
+  },
   useEffect: () => undefined,
   useRef: () => ({ current: null }),
   useSyncExternalStore: (_subscribe, getSnapshot) => getSnapshot(),
@@ -126,7 +151,13 @@ const listState = {
 
 const props = {
   useSessions: (selector) => selector(listState),
-  useWorkspaces: (selector) => selector({}),
+  useWorkspaces: (selector) =>
+    selector({
+      workspaces: [
+        { workspaceId: 'w-a', title: '工作区 A', path: 'C:/work/a' },
+        { workspaceId: 'w-b', title: '工作区 B', path: 'C:/work/b' },
+      ],
+    }),
 };
 
 function render(node) {
@@ -139,7 +170,18 @@ function render(node) {
   return '';
 }
 
-const tree = main.component(props);
+function paint(pageProps, reset) {
+  if (reset) hookState.length = 0;
+  for (let pass = 0; pass < 8; pass += 1) {
+    hookCursor = 0;
+    pendingState = false;
+    const candidate = main.component(pageProps);
+    if (!pendingState) return candidate;
+  }
+  throw new Error('render did not settle');
+}
+
+let tree = paint(props, true);
 const text = render(tree).replace(/\s+/g, ' ');
 
 for (const needle of ['观测台', '最近会话', '驾驶台', '调色台', '新会话：观测台首页', '旧会话：整理报销单', '回到当前会话', '2 个会话']) {
@@ -162,14 +204,20 @@ if (sessionButtons.length !== 2) throw new Error('expected 2 session rows, got '
 const oldest = sessionButtons.find((button) => button.props.title === '旧会话：整理报销单');
 if (!oldest) throw new Error('older session row missing');
 if (sessionButtons[0].props.title !== '新会话：观测台首页') throw new Error('rows are not sorted by recency');
+const conversationPanels = () => calls.filter((call) => call[0] === 'selectPanel' && call[1] === 'conversation').length;
+const beforeOpen = conversationPanels();
 oldest.props.onClick();
-if (!calls.some((call) => call[0] === 'open' && call[1] === 's-old')) throw new Error('session click did not open the session');
-if (!calls.some((call) => call[0] === 'selectPanel' && call[1] === 'conversation')) throw new Error('session click did not switch panels');
+if (!calls.some((call) => call[0] === 'openSession' && call[1] === 's-old')) {
+  throw new Error('session click did not call uiWorkspace.openSession');
+}
+// uiWorkspace already shows the Conversation; selectPanel() would abort its navigation.
+if (conversationPanels() !== beforeOpen) throw new Error('session click forced selectPanel(conversation)');
 
 // Empty list renders the empty state instead of rows.
-const emptyTree = main.component({
+const emptyTree = paint({
   useSessions: (selector) => selector({ ids: [], byId: {}, current: undefined, phase: 'ready', subagentsByParent: {}, jobsBySession: {}, currentAddress: undefined }),
-});
+  useWorkspaces: props.useWorkspaces,
+}, true);
 const emptyText = render(emptyTree);
 if (!emptyText.includes('还没有会话')) throw new Error('empty state missing for an empty list');
 
@@ -211,5 +259,75 @@ if (!themeButton) throw new Error('theme action missing');
 themeButton.props.onClick();
 if (!setThemes.includes('light')) throw new Error('theme cycling did not call setTheme');
 
-console.log('calls:', JSON.stringify(calls.slice(0, 8)));
-console.log('ALL OK');
+// The right-panel action is gone on purpose: opening it without rightbar
+// content leaves an empty column. The left column toggle must work instead.
+const findButton = (label) => (function find(node) {
+  if (!node || typeof node !== 'object') return null;
+  if (Array.isArray(node)) {
+    for (const item of node) {
+      const found = find(item);
+      if (found) return found;
+    }
+    return null;
+  }
+  if (node.type === 'button' && node.props && String(render(node.props.children)).includes(label)) return node;
+  return find(node.props && node.props.children);
+})(tree);
+
+if (findButton('打开右栏')) throw new Error('right panel action should be removed');
+const sidebarButton = findButton('收起 / 展开左栏');
+if (!sidebarButton) throw new Error('left column toggle missing');
+sidebarButton.props.onClick();
+if (!calls.some((call) => call[0] === 'toggleSidebar')) {
+  throw new Error('left column toggle did not call toggleSidebar');
+}
+
+// New session must ask for a workspace first, then start in it.
+tree = paint(props, true);
+const newButton = findButton('新建会话');
+if (!newButton) throw new Error('new session action missing');
+newButton.props.onClick();
+tree = paint(props, false);
+if (!render(tree).includes('先选一个工作区')) throw new Error('workspace picker did not open');
+if (!render(tree).includes('工作区 A')) throw new Error('picker did not list workspaces');
+
+const workspaceItem = (function find(node) {
+  if (!node || typeof node !== 'object') return null;
+  if (Array.isArray(node)) {
+    for (const item of node) {
+      const found = find(item);
+      if (found) return found;
+    }
+    return null;
+  }
+  if (
+    node.type === 'button' &&
+    node.props &&
+    node.props.className === 'obs-picker-item' &&
+    String(render(node.props.children)).includes('工作区 A')
+  ) {
+    return node;
+  }
+  return find(node.props && node.props.children);
+})(tree);
+if (!workspaceItem) throw new Error('workspace item missing');
+const beforeChoose = conversationPanels();
+
+// chooseWorkspace awaits sessions.create() and then reveals via openSession().
+(async () => {
+  await workspaceItem.props.onClick();
+  tree = paint(props, false);
+
+  const created = calls.find((call) => call[0] === 'create');
+  if (!created || created[1].workspaceId !== 'w-a') throw new Error('workspace choice did not create a session in it');
+  if (!calls.some((call) => call[0] === 'openSession' && call[1] === 's-new-id')) {
+    throw new Error('created session was not revealed through openSession');
+  }
+  if (calls.some((call) => call[0] === 'startSession')) throw new Error('startSession must not be used when create() is available');
+  // openSession reveals the Conversation itself; a selectPanel() would abort it.
+  if (conversationPanels() !== beforeChoose) throw new Error('choosing a workspace forced selectPanel(conversation)');
+  if (render(tree).includes('先选一个工作区')) throw new Error('picker stayed open after choosing');
+
+  console.log('calls:', JSON.stringify(calls.slice(0, 8)));
+  console.log('ALL OK');
+})();

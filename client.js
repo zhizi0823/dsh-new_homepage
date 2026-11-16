@@ -5,7 +5,7 @@ window.__ModuleLoader__.load({
     const h = React.createElement;
 
     const NS = 'plugin.observatory';
-    const VERSION = '1.0.0';
+    const VERSION = '1.1.0';
 
     const ZH = {
       title: '观测台',
@@ -50,10 +50,9 @@ window.__ModuleLoader__.load({
       act_folder_d: '浏览并选中一个目录',
       act_back: '回到对话',
       act_back_d: '切回会话主界面',
-      act_sidebar: '收起 / 展开侧栏',
-      act_sidebar_d: '给正文腾出更多宽度',
-      act_right: '打开右栏',
-      act_right_d: '展开右侧辅助面板',
+      act_sidebar: '收起 / 展开左栏',
+      act_sidebar_d: '会话列表那一列',
+      sidebar_toggled: '左栏已切换',
       act_theme: '切换主题',
       act_theme_d: '跟随系统 / 浅色 / 深色 轮换',
       act_lang: '切换语言',
@@ -70,6 +69,11 @@ window.__ModuleLoader__.load({
       data_offline: '会话数据未就绪',
       mode_workspace: '工作区',
       mode_session: '会话',
+      picker_title: '新建会话',
+      picker_hint: '先选一个工作区',
+      picker_cancel: '取消',
+      picker_empty: '还没有工作区',
+      picker_empty_hint: '先在左侧打开或创建一个工作区。',
       folder_picked: '已选择目录：',
       folder_canceled: '已取消选择',
       shortcut: '快捷键',
@@ -119,10 +123,9 @@ window.__ModuleLoader__.load({
       act_folder_d: 'Browse and pick a directory',
       act_back: 'Back to conversation',
       act_back_d: 'Return to the session view',
-      act_sidebar: 'Toggle sidebar',
-      act_sidebar_d: 'Give the content column more room',
-      act_right: 'Open right panel',
-      act_right_d: 'Expand the auxiliary panel',
+      act_sidebar: 'Toggle left column',
+      act_sidebar_d: 'The session list column',
+      sidebar_toggled: 'Left column toggled',
       act_theme: 'Cycle theme',
       act_theme_d: 'Rotate system / light / dark',
       act_lang: 'Cycle language',
@@ -139,6 +142,11 @@ window.__ModuleLoader__.load({
       data_offline: 'Session data unavailable',
       mode_workspace: 'workspace',
       mode_session: 'session',
+      picker_title: 'New session',
+      picker_hint: 'Pick a workspace first',
+      picker_cancel: 'Cancel',
+      picker_empty: 'No workspaces yet',
+      picker_empty_hint: 'Open or create one from the left column first.',
       folder_picked: 'Picked directory: ',
       folder_canceled: 'Selection cancelled',
       shortcut: 'Shortcut',
@@ -157,7 +165,7 @@ window.__ModuleLoader__.load({
     ];
 
     const CSS = `
-.obs-root { height: 100%; overflow: hidden; display: flex; flex-direction: column; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary); }
+.obs-root { position: relative; height: 100%; overflow: hidden; display: flex; flex-direction: column; background: var(--dsw-alias-bg-base); color: var(--dsw-alias-label-primary); }
 .obs-inner { flex: 1 1 auto; min-height: 0; width: 100%; max-width: 1220px; margin: 0 auto; box-sizing: border-box; padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
 .obs-head { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; }
 .obs-h1 { margin: 0; font-size: 17px; font-weight: 650; letter-spacing: .005em; }
@@ -224,6 +232,17 @@ window.__ModuleLoader__.load({
 .obs-dim { font-size: 10px; color: var(--dsw-alias-label-secondary); border: 1px solid var(--dsw-alias-border-l1); border-radius: 999px; padding: 0 6px; }
 .obs-toast { display: flex; gap: 8px; align-items: center; padding: 6px 10px; border-radius: 9px; border: 1px solid var(--dsw-alias-border-l1); background: var(--dsw-alias-bg-layer-1); font-size: 11.5px; word-break: break-all; flex: 0 0 auto; }
 .obs-toast[data-kind="error"] { border-color: var(--dsw-alias-state-error-primary); color: var(--dsw-alias-state-error-primary); }
+.obs-picker-layer { position: absolute; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px; background: rgba(8, 10, 16, .34); }
+.obs-picker { width: min(440px, 100%); max-height: 100%; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 14px; border-radius: 14px; border: 1px solid var(--dsw-alias-border-l1); background: var(--dsw-alias-bg-overlay); box-shadow: 0 16px 48px rgba(0, 0, 0, .28); }
+.obs-picker-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex: 0 0 auto; }
+.obs-picker-hint { font-size: 11px; color: var(--dsw-alias-label-secondary); }
+.obs-picker-list { display: flex; flex-direction: column; gap: 4px; overflow-y: auto; min-height: 0; flex: 1 1 auto; }
+.obs-picker-item { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; text-align: left; padding: 8px 10px; border-radius: 9px; border: 1px solid var(--dsw-alias-border-l1); background: var(--dsw-alias-bg-layer-1); color: inherit; font: inherit; cursor: pointer; flex: 0 0 auto; }
+.obs-picker-item:hover { border-color: var(--dsw-alias-brand-primary); background: var(--dsw-alias-bg-layer-2); }
+.obs-picker-item:focus-visible { outline: 2px solid var(--dsw-alias-brand-primary); outline-offset: 1px; }
+.obs-picker-name { font-size: 12.5px; font-weight: 550; }
+.obs-picker-path { max-width: 100%; font-size: 10.5px; color: var(--dsw-alias-label-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.obs-picker-foot { display: flex; justify-content: flex-end; flex: 0 0 auto; }
 .obs-foot { flex: 0 0 auto; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 10.5px; color: var(--dsw-alias-label-secondary); }
 .obs-resume { margin-top: auto; padding-top: 6px; display: flex; justify-content: flex-end; }
 .obs-kbd { font: inherit; font-size: 10px; padding: 0 4px; border-radius: 4px; border: 1px solid var(--dsw-alias-border-l1); background: var(--dsw-alias-bg-layer-2); }
@@ -278,7 +297,6 @@ window.__ModuleLoader__.load({
       plus: () => svg(15, [h('path', { key: 'a', d: 'M12 5v14' }), h('path', { key: 'b', d: 'M5 12h14' })]),
       folder: () => svg(15, [h('path', { key: 'a', d: 'M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z' })]),
       sidebar: () => svg(15, [h('rect', { key: 'a', x: 3, y: 4, width: 18, height: 16, rx: 2 }), h('path', { key: 'b', d: 'M9 4v16' })]),
-      right: () => svg(15, [h('rect', { key: 'a', x: 3, y: 4, width: 18, height: 16, rx: 2 }), h('path', { key: 'b', d: 'M15 4v16' })]),
       theme: () => svg(15, [h('circle', { key: 'a', cx: 12, cy: 12, r: 4.2 }), h('path', { key: 'b', d: 'M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6' })]),
       lang: () => svg(15, [h('circle', { key: 'a', cx: 12, cy: 12, r: 8.6 }), h('path', { key: 'b', d: 'M3.6 12h16.8' }), h('path', { key: 'c', d: 'M12 3.4c2.6 2.4 4 5.4 4 8.6s-1.4 6.2-4 8.6c-2.6-2.4-4-5.4-4-8.6s1.4-6.2 4-8.6z' })]),
     };
@@ -525,9 +543,13 @@ window.__ModuleLoader__.load({
           const [folder, setFolder] = React.useState(null);
           const [filter, setFilter] = React.useState('');
           const [mood, setMood] = React.useState(null);
+          const [picker, setPicker] = React.useState(false);
 
           const useSessions = props ? props.useSessions : undefined;
           const list = useSessions ? useSessions((state) => state) : null;
+
+          const useWorkspaces = props ? props.useWorkspaces : undefined;
+          const workspaceSnap = useWorkspaces ? useWorkspaces((state) => state) : null;
 
           const theme = service('theme');
           const layout = service('layout');
@@ -543,6 +565,24 @@ window.__ModuleLoader__.load({
           const scheme = themeSnap && themeSnap.active && themeSnap.active.colorScheme === 'dark' ? 'dark' : 'light';
           const accent = ACCENTS.find((item) => item.id === accentId) || null;
           const accentColor = accent ? accent[scheme] : null;
+
+          // WorkspaceSnapshot's shape is not part of the documented surface, so
+          // accept the plausible containers instead of trusting one shape.
+          const workspaceRows = (() => {
+            const source = workspaceSnap;
+            let rows = [];
+            if (Array.isArray(source)) rows = source;
+            else if (source && Array.isArray(source.workspaces)) rows = source.workspaces;
+            else if (source && Array.isArray(source.items)) rows = source.items;
+            else if (source && source.byId && typeof source.byId === 'object') rows = Object.keys(source.byId).map((key) => source.byId[key]);
+            return rows
+              .filter((row) => row && (row.workspaceId || row.id))
+              .map((row) => ({
+                id: row.workspaceId || row.id,
+                title: String(row.title || basename(row.path) || row.workspaceId || row.id),
+                path: String(row.path || ''),
+              }));
+          })();
 
           React.useEffect(() => {
             const timer = window.setInterval(() => setNow(new Date()), 1000);
@@ -568,6 +608,15 @@ window.__ModuleLoader__.load({
             const timer = window.setTimeout(() => setToast(null), 4200);
             return () => window.clearTimeout(timer);
           }, [toast]);
+
+          React.useEffect(() => {
+            if (!picker) return undefined;
+            const onKey = (event) => {
+              if (event && event.key === 'Escape') setPicker(false);
+            };
+            window.addEventListener('keydown', onKey);
+            return () => window.removeEventListener('keydown', onKey);
+          }, [picker]);
 
           // The mood plugin publishes a same-origin state route; the card hides
           // itself when that plugin is absent or the request is refused.
@@ -674,10 +723,33 @@ window.__ModuleLoader__.load({
             }
           };
 
+          // Selecting a Session is a navigation action, not a sessions-service
+          // method: ISessions has no open(), uiWorkspace.openSession() owns it.
+          // It already shows the Conversation, so no extra selectPanel here —
+          // selectPanel() aborts any navigation still in flight.
           const openSession = (id) => {
+            if (id === undefined || id === null) return;
             try {
-              if (sessionService) sessionService.open(id);
-              if (layout) layout.selectPanel('conversation');
+              if (workspace) workspace.openSession(id);
+            } catch (error) {
+              setToast({ kind: 'error', text: (error && error.message) || String(error) });
+            }
+          };
+
+          // startSession() ends in replaceMain(..., "preserve"), which selects
+          // the blank but never reveals the Conversation; and a selectPanel()
+          // right after would abort its in-flight navigation (beginNavigation).
+          // So create the blank explicitly, then reveal it through openSession.
+          const chooseWorkspace = async (workspaceId) => {
+            setPicker(false);
+            try {
+              if (!workspace) return;
+              if (sessionService && typeof sessionService.create === 'function') {
+                const created = await sessionService.create({ workspaceId });
+                workspace.openSession(created);
+                return;
+              }
+              workspace.startSession(workspaceId);
             } catch (error) {
               setToast({ kind: 'error', text: (error && error.message) || String(error) });
             }
@@ -721,7 +793,12 @@ window.__ModuleLoader__.load({
               description: tr('act_new_d'),
               run: workspace
                 ? () => {
-                    workspace.startSession();
+                    // Ask which workspace first; only pickless when there is nothing to pick.
+                    if (workspaceRows.length === 0) {
+                      workspace.startSession();
+                      return null;
+                    }
+                    setPicker(true);
                     return null;
                   }
                 : null,
@@ -752,14 +829,12 @@ window.__ModuleLoader__.load({
               icon: 'sidebar',
               title: tr('act_sidebar'),
               description: tr('act_sidebar_d'),
-              run: layout ? () => layout.toggleSidebar() : null,
-            },
-            {
-              id: 'right',
-              icon: 'right',
-              title: tr('act_right'),
-              description: tr('act_right_d'),
-              run: layout ? () => layout.openRightbar(false, false) : null,
+              run: layout
+                ? () => {
+                    layout.toggleSidebar();
+                    return tr('sidebar_toggled');
+                  }
+                : null,
             },
             {
               id: 'theme',
@@ -1073,6 +1148,64 @@ window.__ModuleLoader__.load({
                 h('span', null, '@local/observatory · ' + tr('version') + ' ' + VERSION),
               ),
             ),
+            picker
+              ? h(
+                  'div',
+                  { className: 'obs-picker-layer', role: 'presentation', onClick: () => setPicker(false) },
+                  h(
+                    'div',
+                    {
+                      className: 'obs-picker',
+                      role: 'dialog',
+                      'aria-modal': 'true',
+                      'aria-label': tr('picker_title'),
+                      onClick: (event) => {
+                        if (event && typeof event.stopPropagation === 'function') event.stopPropagation();
+                      },
+                    },
+                    h(
+                      'div',
+                      { className: 'obs-picker-head' },
+                      h('h2', { className: 'obs-h2' }, tr('picker_title')),
+                      h('span', { className: 'obs-picker-hint' }, tr('picker_hint')),
+                    ),
+                    workspaceRows.length
+                      ? h(
+                          'div',
+                          { className: 'obs-picker-list' },
+                          workspaceRows.map((row) =>
+                            h(
+                              'button',
+                              {
+                                key: row.id,
+                                type: 'button',
+                                className: 'obs-picker-item',
+                                title: row.path || row.title,
+                                onClick: () => chooseWorkspace(row.id),
+                              },
+                              h('span', { className: 'obs-picker-name' }, row.title),
+                              row.path ? h('span', { className: 'obs-picker-path' }, row.path) : null,
+                            ),
+                          ),
+                        )
+                      : h(
+                          'div',
+                          { className: 'obs-empty' },
+                          h('b', null, tr('picker_empty')),
+                          tr('picker_empty_hint'),
+                        ),
+                    h(
+                      'div',
+                      { className: 'obs-picker-foot' },
+                      h(
+                        'button',
+                        { type: 'button', className: 'obs-btn', onClick: () => setPicker(false) },
+                        tr('picker_cancel'),
+                      ),
+                    ),
+                  ),
+                )
+              : null,
           );
         }
 

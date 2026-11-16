@@ -2,7 +2,7 @@
 
 > 把 DSH 的 Web 界面变成一页能用的首页：打开就看见状态，抬手就能进会话。
 
-当前版本 **1.0.0**。变更记录见 [CHANGELOG.md](CHANGELOG.md)。
+当前版本 **1.1.0**（内部构建号 2）。变更记录见 [CHANGELOG.md](CHANGELOG.md)。
 
 ![插件图标](icon.svg)
 
@@ -54,8 +54,8 @@ DSH 默认落在对话里——要换会话得去左边翻，要看运行状态�
 - 每条：标题、目录名、相对时间（刚刚 / N 分钟前 / N 小时前 / 昨天 / 日期）、状态点；
 - **状态点**：灰＝闲置，绿＝进行中，品牌色＝有新回复未读；
 - 顶部筛选框按标题或路径实时过滤；
-- 点一条：`sessions.open()` 切进那个会话，并切到对话面板；
-- 有当前会话时，右下角给一个「回到当前会话」。
+- 点一条：`uiWorkspace.openSession(sessionId)` 切进那个会话并切到对话面板（`openSession` 自带 `reveal`，我们不再补 `selectPanel`，否则会 abort 它的导航）；
+- 「回到当前会话」按钮依赖会话列表快照里的 `current` 字段：当前这版 DSH 的 `SessionListState` 没有它，所以按钮不会出现（代码保留，字段回来就自动生效）。
 
 ### 心情（可选）
 
@@ -72,11 +72,10 @@ DSH 默认落在对话里——要换会话得去左边翻，要看运行状态�
 
 | 动作 | 调用的接口 |
 |---|---|
-| 新建会话 | `uiWorkspace.startSession()` |
+| 新建会话 | 先弹工作区选择器；选中后 `sessions.create({ workspaceId })` → `uiWorkspace.openSession(id)`（无工作区时退回 `startSession()`） |
 | 打开文件夹 | `uiWorkspace.pickDirectory()`（选中的路径会留在页面上） |
 | 回到对话 | `layout.selectPanel('conversation')` |
-| 收起 / 展开侧栏 | `layout.toggleSidebar()` |
-| 打开右栏 | `layout.openRightbar(false, false)` |
+| 收起 / 展开左栏 | `layout.toggleSidebar()`（与左栏自带的展开按钮同一条调用） |
 | 切换主题 | `theme.setTheme()`，跟随系统 → 浅色 → 深色 |
 | 切换语言 | `locale.setLocale()`，在已注册语言间轮换 |
 
@@ -105,7 +104,7 @@ DSH 默认落在对话里——要换会话得去左边翻，要看运行状态�
 dsh plugin --profile desktop add link:<本目录绝对路径>
 ```
 
-装完**刷新页面**；页脚版本号从 `1.0.0` 起算，若显示的不是它，说明客户端模块还是旧的，重启一次 DSH。
+装完**刷新页面**；页脚应显示 `版本 1.1.0`，若不是，说明客户端模块还是旧的，重启一次 DSH。
 
 卸载：`dsh plugin --profile desktop remove @local/observatory`，或插件管理器里移除。
 
