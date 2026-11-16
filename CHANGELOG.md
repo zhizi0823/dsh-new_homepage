@@ -96,6 +96,11 @@
 
 ## 未发布
 
+### 调整
+
+- 开源：采用 **MIT License**（新增 `LICENSE`，`package.json` 标注 `"license": "MIT"` 并纳入发布文件，README 补许可说明与徽章）。版本号与构建号均未变更。
+- 文档：README 里「首页排序条数」的示例从 `slice(0, 8)` 更正为 `slice(0, 12)`。
+
 ### 计划
 
 - 计划：按工作区分组会话（`useWorkspaces`）。

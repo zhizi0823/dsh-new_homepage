@@ -4,6 +4,8 @@
 
 当前版本 **1.2.0**（内部构建号 3）。变更记录见 [CHANGELOG.md](CHANGELOG.md)。
 
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 ![插件图标](icon.svg)
 
 ## 为什么要有它
@@ -177,9 +179,13 @@ node test/smoke.cjs   # 替身 React 单遍渲染：注册、会话列表、点�
 | 文案 | `client.js` 里的 `ZH` / `EN` 两张表（键必须成对） |
 | 强调色备选 | `client.js` 里的 `ACCENTS` |
 | 布局与间距 | `client.js` 顶部的 `CSS` 字符串（类名统一 `obs-` 前缀） |
-| 首页排序条数 | `summaries.slice(0, 8)` |
+| 首页排序条数 | `summaries.slice(0, 12)` |
 | 自动落地 | 文件末尾 400ms 的那个 `ctx.effect` |
 
 ## 许可
 
-本插件为本地自用插件（`private: true`），未单独声明开源许可。图标为手绘 SVG，可随本插件一并使用。
+[MIT License](LICENSE) © 2026 zhizi0823
+
+可以自由使用、修改、再分发和商用，保留版权与许可声明即可。图标为本项目手绘 SVG，随本项目一并按 MIT 授权。
+
+> `package.json` 里的 `private: true` 只表示**不发布到 npm**，不影响 MIT 授权下的分发与使用。
