@@ -37,6 +37,8 @@ for (const match of source.matchAll(/icon: '([a-z]+)'/g)) {
   if (!icons.has(match[1])) failures.push('action uses unknown icon: ' + match[1]);
 }
 const usedIcons = new Set([...source.matchAll(/icon: '([a-z]+)'/g)].map((m) => m[1]));
+// Icons rendered directly (not through an action) count as used too.
+for (const match of source.matchAll(/ICONS\.([a-z]+)\s*\(/g)) usedIcons.add(match[1]);
 for (const key of icons) if (!usedIcons.has(key)) failures.push('unused icon: ' + key);
 
 const css = block('const CSS = `', '`;');

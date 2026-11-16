@@ -5,7 +5,7 @@ window.__ModuleLoader__.load({
     const h = React.createElement;
 
     const NS = 'plugin.observatory';
-    const VERSION = '1.1.0';
+    const VERSION = '1.2.0';
 
     const ZH = {
       title: '观测台',
@@ -74,6 +74,18 @@ window.__ModuleLoader__.load({
       picker_cancel: '取消',
       picker_empty: '还没有工作区',
       picker_empty_hint: '先在左侧打开或创建一个工作区。',
+      pin: '置顶',
+      unpin: '取消置顶',
+      palette_open: '跳转',
+      palette_open_d: '搜索会话与动作（Ctrl+K）',
+      palette_title: '跳转',
+      palette_hint: '输入以筛选，↑↓ 选择，回车打开',
+      palette_empty: '没有匹配项',
+      tint_on: '跟随心情：开',
+      tint_off: '跟随心情：关',
+      autoland_on: '开机落在这里：开',
+      autoland_off: '开机落在这里：关',
+      spark_hint: '最近心情',
       folder_picked: '已选择目录：',
       folder_canceled: '已取消选择',
       shortcut: '快捷键',
@@ -147,6 +159,18 @@ window.__ModuleLoader__.load({
       picker_cancel: 'Cancel',
       picker_empty: 'No workspaces yet',
       picker_empty_hint: 'Open or create one from the left column first.',
+      pin: 'Pin',
+      unpin: 'Unpin',
+      palette_open: 'Jump to',
+      palette_open_d: 'Search sessions and actions (Ctrl+K)',
+      palette_title: 'Jump to',
+      palette_hint: 'Type to filter, ↑↓ to move, Enter to open',
+      palette_empty: 'No matches',
+      tint_on: 'Mood tint: on',
+      tint_off: 'Mood tint: off',
+      autoland_on: 'Land here on start: on',
+      autoland_off: 'Land here on start: off',
+      spark_hint: 'Recent mood',
       folder_picked: 'Picked directory: ',
       folder_canceled: 'Selection cancelled',
       shortcut: 'Shortcut',
@@ -173,7 +197,7 @@ window.__ModuleLoader__.load({
 .obs-live { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--dsw-alias-label-secondary); }
 .obs-live::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--dsw-alias-state-success-primary); }
 .obs-hero { position: relative; flex: 0 0 auto; overflow: hidden; border: 1px solid var(--dsw-alias-border-l1); border-radius: 12px; padding: 9px 13px; background: linear-gradient(150deg, var(--dsw-alias-bg-layer-1), var(--dsw-alias-bg-layer-2)); }
-.obs-canvas { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--dsw-alias-brand-primary); opacity: .45; pointer-events: none; }
+.obs-canvas { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--dsw-alias-brand-primary); opacity: .85; pointer-events: none; }
 .obs-hero-inner { position: relative; display: flex; align-items: center; gap: 12px; min-width: 0; }
 .obs-greet { font-size: 14px; font-weight: 640; }
 .obs-time { font-size: 20px; font-weight: 620; line-height: 1.05; letter-spacing: .01em; font-variant-numeric: tabular-nums; }
@@ -243,6 +267,14 @@ window.__ModuleLoader__.load({
 .obs-picker-name { font-size: 12.5px; font-weight: 550; }
 .obs-picker-path { max-width: 100%; font-size: 10.5px; color: var(--dsw-alias-label-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .obs-picker-foot { display: flex; justify-content: flex-end; flex: 0 0 auto; }
+.obs-picker-item[data-active="true"] { border-color: var(--dsw-alias-brand-primary); background: var(--dsw-alias-bg-layer-2); }
+.obs-pin { flex: 0 0 auto; width: 20px; height: 20px; padding: 0; display: grid; place-items: center; border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--dsw-alias-label-secondary); cursor: pointer; opacity: 0; transition: opacity .12s ease, color .12s ease; }
+.obs-session:hover .obs-pin, .obs-session:focus-within .obs-pin, .obs-pin[aria-pressed="true"] { opacity: 1; }
+.obs-pin[aria-pressed="true"] { color: var(--dsw-alias-brand-primary); border-color: var(--dsw-alias-border-l1); }
+.obs-pin:hover { border-color: var(--dsw-alias-border-l1); background: var(--dsw-alias-bg-layer-2); }
+.obs-spark-wrap { margin-top: 2px; color: var(--dsw-alias-brand-primary); opacity: .9; }
+.obs-spark { display: block; width: 100%; height: 26px; }
+.obs-foot-toggle { font-size: 10.5px; padding: 2px 8px; }
 .obs-foot { flex: 0 0 auto; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 10.5px; color: var(--dsw-alias-label-secondary); }
 .obs-resume { margin-top: auto; padding-top: 6px; display: flex; justify-content: flex-end; }
 .obs-kbd { font: inherit; font-size: 10px; padding: 0 4px; border-radius: 4px; border: 1px solid var(--dsw-alias-border-l1); background: var(--dsw-alias-bg-layer-2); }
@@ -299,7 +331,24 @@ window.__ModuleLoader__.load({
       sidebar: () => svg(15, [h('rect', { key: 'a', x: 3, y: 4, width: 18, height: 16, rx: 2 }), h('path', { key: 'b', d: 'M9 4v16' })]),
       theme: () => svg(15, [h('circle', { key: 'a', cx: 12, cy: 12, r: 4.2 }), h('path', { key: 'b', d: 'M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6' })]),
       lang: () => svg(15, [h('circle', { key: 'a', cx: 12, cy: 12, r: 8.6 }), h('path', { key: 'b', d: 'M3.6 12h16.8' }), h('path', { key: 'c', d: 'M12 3.4c2.6 2.4 4 5.4 4 8.6s-1.4 6.2-4 8.6c-2.6-2.4-4-5.4-4-8.6s1.4-6.2 4-8.6z' })]),
+      search: () => svg(15, [h('circle', { key: 'a', cx: 10.5, cy: 10.5, r: 6.2 }), h('path', { key: 'b', d: 'M15.2 15.2L20 20' })]),
+      pin: () => svg(13, [h('path', { key: 'a', d: 'M9 4l7 7-3 1-3 5-1-5-4-3 4-5z' })]),
     };
+
+    function Spark({ points }) {
+      const width = 160;
+      const height = 26;
+      const values = points.map((point) => Math.max(0, Math.min(100, Number(point.v) || 0)));
+      const step = values.length > 1 ? width / (values.length - 1) : width;
+      const path = values
+        .map((value, index) => (index === 0 ? 'M' : 'L') + (index * step).toFixed(1) + ' ' + (height - (value / 100) * height).toFixed(1))
+        .join(' ');
+      return h(
+        'svg',
+        { className: 'obs-spark', viewBox: '0 0 ' + width + ' ' + height, preserveAspectRatio: 'none', 'aria-hidden': true },
+        h('path', { d: path, fill: 'none', stroke: 'currentColor', strokeWidth: 1.4, strokeLinejoin: 'round', strokeLinecap: 'round' }),
+      );
+    }
 
     function NavIcon({ size, active }) {
       return h(
@@ -351,8 +400,8 @@ window.__ModuleLoader__.load({
             stars.push({
               x: Math.random() * width,
               y: Math.random() * height,
-              r: 0.4 + Math.random() * 1.25,
-              a: 0.22 + Math.random() * 0.5,
+              r: 0.7 + Math.random() * 1.3,
+              a: 0.4 + Math.random() * 0.55,
               vx: (Math.random() - 0.5) * 0.004,
               vy: (Math.random() - 0.5) * 0.004,
               phase: Math.random() * Math.PI * 2,
@@ -362,7 +411,9 @@ window.__ModuleLoader__.load({
 
         const color = () => {
           const value = window.getComputedStyle(canvas).color;
-          return value && value !== 'rgba(0, 0, 0, 0)' ? value : 'currentColor';
+          // Canvas rejects `currentColor`; an unresolvable token would silently
+          // keep the previous fill (black), which is invisible on the dark theme.
+          return /^(rgb|hsl)a?\(/i.test(value) || value.charAt(0) === '#' ? value : '#6b8cff';
         };
 
         const draw = (time) => {
@@ -379,7 +430,7 @@ window.__ModuleLoader__.load({
               if (star.y < 0) star.y += height;
               if (star.y > height) star.y -= height;
             }
-            paint.globalAlpha = reduced ? star.a : star.a * (0.55 + 0.45 * Math.sin(time / 1100 + star.phase));
+            paint.globalAlpha = reduced ? star.a : star.a * (0.65 + 0.35 * Math.sin(time / 1100 + star.phase));
             paint.beginPath();
             paint.arc(star.x, star.y, star.r, 0, Math.PI * 2);
             paint.fill();
@@ -499,6 +550,50 @@ window.__ModuleLoader__.load({
       return parts.length ? parts[parts.length - 1] : path;
     }
 
+    // Local-only preferences. Everything degrades to defaults when storage is
+    // unavailable (private mode, quota, a stubbed window in tests).
+    const PREFS_KEY = 'plugin.observatory.prefs';
+    const MOOD_KEY = 'plugin.observatory.mood';
+
+    function readPrefs() {
+      try {
+        const raw = window.localStorage.getItem(PREFS_KEY);
+        const parsed = raw ? JSON.parse(raw) : null;
+        return parsed && typeof parsed === 'object' ? parsed : {};
+      } catch (error) {
+        return {};
+      }
+    }
+
+    function writePrefs(patch) {
+      try {
+        const next = Object.assign({}, readPrefs(), patch);
+        window.localStorage.setItem(PREFS_KEY, JSON.stringify(next));
+        return next;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function readMoodSeries() {
+      try {
+        const raw = window.localStorage.getItem(MOOD_KEY);
+        const parsed = raw ? JSON.parse(raw) : null;
+        if (!Array.isArray(parsed)) return [];
+        return parsed.filter((point) => point && typeof point.v === 'number' && typeof point.t === 'number').slice(-48);
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function writeMoodSeries(series) {
+      try {
+        window.localStorage.setItem(MOOD_KEY, JSON.stringify(series.slice(-48)));
+      } catch (error) {
+        /* quota or private mode: the curve just stays session-local */
+      }
+    }
+
     return {
       inject: ['slots', 'locale'],
       apply(ctx) {
@@ -544,6 +639,14 @@ window.__ModuleLoader__.load({
           const [filter, setFilter] = React.useState('');
           const [mood, setMood] = React.useState(null);
           const [picker, setPicker] = React.useState(false);
+          const [pins, setPins] = React.useState(() => {
+            const saved = readPrefs().pins;
+            return Array.isArray(saved) ? saved.filter((id) => typeof id === 'string') : [];
+          });
+          const [autoLand, setAutoLand] = React.useState(() => readPrefs().autoLand !== false);
+          const [moodTint, setMoodTint] = React.useState(() => readPrefs().moodTint === true);
+          const [series, setSeries] = React.useState(readMoodSeries);
+          const [palette, setPalette] = React.useState({ open: false, query: '', index: 0 });
 
           const useSessions = props ? props.useSessions : undefined;
           const list = useSessions ? useSessions((state) => state) : null;
@@ -617,6 +720,69 @@ window.__ModuleLoader__.load({
             window.addEventListener('keydown', onKey);
             return () => window.removeEventListener('keydown', onKey);
           }, [picker]);
+
+          // Escape closes the palette even when focus left its input.
+          React.useEffect(() => {
+            if (!palette.open) return undefined;
+            const onKey = (event) => {
+              if (event && event.key === 'Escape') setPalette({ open: false, query: '', index: 0 });
+            };
+            window.addEventListener('keydown', onKey);
+            return () => window.removeEventListener('keydown', onKey);
+          }, [palette.open]);
+
+          // Ctrl/Cmd+K opens the jump palette, the way a home surface should.
+          React.useEffect(() => {
+            const onKey = (event) => {
+              if (!event || !(event.ctrlKey || event.metaKey) || event.shiftKey || event.altKey) return;
+              if (typeof event.key !== 'string' || event.key.toLowerCase() !== 'k') return;
+              event.preventDefault();
+              setPalette((current) => (current.open ? current : { open: true, query: '', index: 0 }));
+            };
+            window.addEventListener('keydown', onKey);
+            return () => window.removeEventListener('keydown', onKey);
+          }, []);
+
+          // Mood curve: one sample whenever the value actually changes.
+          React.useEffect(() => {
+            const value = mood && typeof mood.mood === 'number' ? mood.mood : null;
+            if (value === null) return;
+            setSeries((previous) => {
+              const last = previous[previous.length - 1];
+              if (last && last.v === value && Date.now() - last.t < 60000) return previous;
+              const next = previous.concat([{ t: Date.now(), v: value }]).slice(-48);
+              writeMoodSeries(next);
+              return next;
+            });
+          }, [mood && mood.mood]);
+
+          // Optional: let the mood tint the whole UI (temporary token layer).
+          React.useEffect(() => {
+            if (!moodTint || !theme) return undefined;
+            const value = mood && typeof mood.mood === 'number' ? mood.mood : null;
+            if (value === null) return undefined;
+            const hue = Math.round(210 - (Math.max(0, Math.min(100, value)) / 100) * 190);
+            let dispose = null;
+            try {
+              dispose = theme.overrideTokens('plugin.observatory.mood', {
+                '--dsw-alias-brand-primary': {
+                  light: 'hsl(' + hue + ' 70% 45%)',
+                  dark: 'hsl(' + hue + ' 75% 66%)',
+                },
+              });
+            } catch (error) {
+              dispose = null;
+            }
+            return () => {
+              if (typeof dispose === 'function') {
+                try {
+                  dispose();
+                } catch (error) {
+                  /* the newer layer owns the token now */
+                }
+              }
+            };
+          }, [moodTint, mood && mood.mood, theme]);
 
           // The mood plugin publishes a same-origin state route; the card hides
           // itself when that plugin is absent or the request is refused.
@@ -762,7 +928,12 @@ window.__ModuleLoader__.load({
               const summary = list.byId[id];
               if (summary) rows.push(summary);
             }
-            rows.sort((left, right) => (right.updatedAt || 0) - (left.updatedAt || 0));
+            rows.sort((left, right) => {
+              const pinnedLeft = pins.includes(left.id) ? 1 : 0;
+              const pinnedRight = pins.includes(right.id) ? 1 : 0;
+              if (pinnedLeft !== pinnedRight) return pinnedRight - pinnedLeft;
+              return (right.updatedAt || 0) - (left.updatedAt || 0);
+            });
             const needle = filter.trim().toLowerCase();
             const matched = needle
               ? rows.filter(
@@ -786,6 +957,16 @@ window.__ModuleLoader__.load({
           ];
 
           const actions = [
+            {
+              id: 'palette',
+              icon: 'search',
+              title: tr('palette_open'),
+              description: tr('palette_open_d'),
+              run: () => {
+                setPalette({ open: true, query: '', index: 0 });
+                return null;
+              },
+            },
             {
               id: 'new',
               icon: 'plus',
@@ -869,6 +1050,43 @@ window.__ModuleLoader__.load({
             },
           ];
 
+          // Jump palette: the first four deck actions plus the visible sessions.
+          const paletteEntries = (() => {
+            const needle = palette.query.trim().toLowerCase();
+            const entries = actions
+              .filter((action) => action.id !== 'palette' && action.run)
+              .map((action) => ({
+                id: 'act:' + action.id,
+                label: action.title,
+                hint: action.description,
+                run: () => run(action.run),
+              }))
+              .concat(
+                summaries.map((summary) => ({
+                  id: 's:' + summary.id,
+                  label: String(summary.displayTitle || summary.id),
+                  hint: basename(summary.cwd),
+                  run: () => openSession(summary.id),
+                })),
+              );
+            if (!needle) return entries.slice(0, 10);
+            return entries
+              .filter((entry) => (entry.label + ' ' + entry.hint).toLowerCase().includes(needle))
+              .slice(0, 10);
+          })();
+
+          const closePalette = () => setPalette({ open: false, query: '', index: 0 });
+          const choosePalette = (entry) => {
+            closePalette();
+            if (entry) entry.run();
+          };
+
+          const togglePin = (id) => {
+            const next = pins.includes(id) ? pins.filter((item) => item !== id) : pins.concat([id]);
+            setPins(next);
+            writePrefs({ pins: next });
+          };
+
           const sessionsCard = h(
             'div',
             { className: 'obs-card obs-card--grow' },
@@ -902,16 +1120,28 @@ window.__ModuleLoader__.load({
                   { className: 'obs-sessions' },
                   summaries.length === 0
                     ? h('div', { className: 'obs-empty' }, tr('no_match'))
-                    : summaries.map((summary) =>
-                        h(
-                          'button',
+                    : summaries.map((summary) => {
+                        const pinned = pins.includes(summary.id);
+                        return h(
+                          'div',
                           {
                             key: summary.id,
-                            type: 'button',
+                            role: 'button',
+                            tabIndex: 0,
                             className: 'obs-session',
                             'data-current': summary.id === currentId ? 'true' : 'false',
+                            'data-pinned': pinned ? 'true' : 'false',
                             title: String(summary.displayTitle || summary.id),
                             onClick: () => openSession(summary.id),
+                            onKeyDown: (event) => {
+                              if (!event) return;
+                              // Space/Enter on the nested pin button must not open the row.
+                              if (event.target && event.currentTarget && event.target !== event.currentTarget) return;
+                              if (event.key === 'Enter' || event.key === ' ') {
+                                event.preventDefault();
+                                openSession(summary.id);
+                              }
+                            },
                           },
                           h('span', {
                             className: 'obs-dot',
@@ -931,8 +1161,23 @@ window.__ModuleLoader__.load({
                             ),
                           ),
                           h('span', { className: 'obs-s-time' }, relative(summary.updatedAt)),
-                        ),
-                      ),
+                          h(
+                            'button',
+                            {
+                              type: 'button',
+                              className: 'obs-pin',
+                              'aria-pressed': pinned,
+                              title: pinned ? tr('unpin') : tr('pin'),
+                              'aria-label': pinned ? tr('unpin') : tr('pin'),
+                              onClick: (event) => {
+                                if (event && typeof event.stopPropagation === 'function') event.stopPropagation();
+                                togglePin(summary.id);
+                              },
+                            },
+                            ICONS.pin ? ICONS.pin() : null,
+                          ),
+                        );
+                      }),
                 ),
             currentId
               ? h(
@@ -1029,6 +1274,13 @@ window.__ModuleLoader__.load({
                             ),
                           ),
                           mood.lastReason ? h('div', { className: 'obs-mood-reason' }, String(mood.lastReason)) : null,
+                          series.length >= 2
+                            ? h(
+                                'div',
+                                { className: 'obs-spark-wrap', title: tr('spark_hint') },
+                                h(Spark, { points: series.slice(-24) }),
+                              )
+                            : null,
                           Array.isArray(mood.dims) && mood.dims.some((dim) => dim && dim.value > 0)
                             ? h(
                                 'div',
@@ -1126,6 +1378,21 @@ window.__ModuleLoader__.load({
                             )
                           : null,
                         folder ? h('span', { className: 'obs-hint', style: { marginTop: 0 } }, folder) : null,
+                        h(
+                          'button',
+                          {
+                            type: 'button',
+                            className: 'obs-btn',
+                            'aria-pressed': moodTint,
+                            disabled: !mood,
+                            onClick: () => {
+                              const next = !moodTint;
+                              setMoodTint(next);
+                              writePrefs({ moodTint: next });
+                            },
+                          },
+                          moodTint ? tr('tint_on') : tr('tint_off'),
+                        ),
                       ),
                       h('div', { className: 'obs-hint' }, tr('studio_hint')),
                     ),
@@ -1144,6 +1411,24 @@ window.__ModuleLoader__.load({
                   h('kbd', { className: 'obs-kbd' }, 'Shift'),
                   ' + ',
                   h('kbd', { className: 'obs-kbd' }, 'O'),
+                ),
+                h(
+                  'span',
+                  null,
+                  h(
+                    'button',
+                    {
+                      type: 'button',
+                      className: 'obs-btn obs-foot-toggle',
+                      'aria-pressed': autoLand,
+                      onClick: () => {
+                        const next = !autoLand;
+                        setAutoLand(next);
+                        writePrefs({ autoLand: next });
+                      },
+                    },
+                    autoLand ? tr('autoland_on') : tr('autoland_off'),
+                  ),
                 ),
                 h('span', null, '@local/observatory · ' + tr('version') + ' ' + VERSION),
               ),
@@ -1206,6 +1491,84 @@ window.__ModuleLoader__.load({
                   ),
                 )
               : null,
+            palette.open
+              ? h(
+                  'div',
+                  { className: 'obs-picker-layer', role: 'presentation', onClick: closePalette },
+                  h(
+                    'div',
+                    {
+                      className: 'obs-picker obs-palette',
+                      role: 'dialog',
+                      'aria-modal': 'true',
+                      'aria-label': tr('palette_title'),
+                      onClick: (event) => {
+                        if (event && typeof event.stopPropagation === 'function') event.stopPropagation();
+                      },
+                    },
+                    h(
+                      'div',
+                      { className: 'obs-picker-head' },
+                      h('h2', { className: 'obs-h2' }, tr('palette_title')),
+                      h('span', { className: 'obs-picker-hint' }, tr('palette_hint')),
+                    ),
+                    h('input', {
+                      className: 'obs-input',
+                      type: 'text',
+                      value: palette.query,
+                      placeholder: tr('palette_hint'),
+                      'aria-label': tr('palette_title'),
+                      onChange: (event) =>
+                        setPalette((current) => ({ open: true, query: event.target.value, index: 0 })),
+                      onKeyDown: (event) => {
+                        if (!event) return;
+                        if (event.key === 'ArrowDown') {
+                          event.preventDefault();
+                          setPalette((current) => ({
+                            open: true,
+                            query: current.query,
+                            index: Math.min(current.index + 1, Math.max(0, paletteEntries.length - 1)),
+                          }));
+                        } else if (event.key === 'ArrowUp') {
+                          event.preventDefault();
+                          setPalette((current) => ({
+                            open: true,
+                            query: current.query,
+                            index: Math.max(0, current.index - 1),
+                          }));
+                        } else if (event.key === 'Enter') {
+                          event.preventDefault();
+                          choosePalette(paletteEntries[palette.index]);
+                        } else if (event.key === 'Escape') {
+                          event.preventDefault();
+                          closePalette();
+                        }
+                      },
+                    }),
+                    paletteEntries.length
+                      ? h(
+                          'div',
+                          { className: 'obs-picker-list' },
+                          paletteEntries.map((entry, index) =>
+                            h(
+                              'button',
+                              {
+                                key: entry.id,
+                                type: 'button',
+                                className: 'obs-picker-item',
+                                'data-active': index === palette.index ? 'true' : 'false',
+                                onMouseEnter: () => setPalette((current) => ({ open: true, query: current.query, index })),
+                                onClick: () => choosePalette(entry),
+                              },
+                              h('span', { className: 'obs-picker-name' }, entry.label),
+                              entry.hint ? h('span', { className: 'obs-picker-path' }, entry.hint) : null,
+                            ),
+                          ),
+                        )
+                      : h('div', { className: 'obs-empty' }, tr('palette_empty')),
+                  ),
+                )
+              : null,
           );
         }
 
@@ -1232,7 +1595,9 @@ window.__ModuleLoader__.load({
         });
 
         // Land on the observatory: the page is the home surface on every reload.
+        // The footer toggle stores the preference; it applies on the next load.
         ctx.effect(() => {
+          if (readPrefs().autoLand === false) return undefined;
           const timer = window.setTimeout(() => {
             const target = service('layout');
             if (!target) return;

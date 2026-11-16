@@ -196,7 +196,7 @@ const sessionButtons = [];
 (function walk(node) {
   if (!node || typeof node !== 'object') return;
   if (Array.isArray(node)) { node.forEach(walk); return; }
-  if (node.type === 'button' && node.props && node.props.className === 'obs-session') sessionButtons.push(node);
+  if (node.props && node.props.className === 'obs-session') sessionButtons.push(node);
   walk(node.props && node.props.children);
 })(tree);
 console.log('session rows:', sessionButtons.length);
@@ -281,6 +281,91 @@ sidebarButton.props.onClick();
 if (!calls.some((call) => call[0] === 'toggleSidebar')) {
   throw new Error('left column toggle did not call toggleSidebar');
 }
+
+const findClass = (className) => (function find(node) {
+  if (!node || typeof node !== 'object') return null;
+  if (Array.isArray(node)) {
+    for (const item of node) {
+      const found = find(item);
+      if (found) return found;
+    }
+    return null;
+  }
+  if (node.type && node.props && node.props.className === className) return node;
+  return find(node.props && node.props.children);
+})(tree);
+
+// Pinning moves a session above the unpinned ones.
+tree = paint(props, true);
+const pinButton = findClass('obs-pin');
+if (!pinButton) throw new Error('pin button missing on session rows');
+pinButton.props.onClick({ stopPropagation() {} });
+tree = paint(props, false);
+const firstRow = (function find(node) {
+  if (!node || typeof node !== 'object') return null;
+  if (Array.isArray(node)) {
+    for (const item of node) {
+      const found = find(item);
+      if (found) return found;
+    }
+    return null;
+  }
+  if (node.props && node.props.className === 'obs-session') return node;
+  return find(node.props && node.props.children);
+})(tree);
+if (!firstRow || firstRow.props['data-pinned'] !== 'true') throw new Error('pinned session did not move to the top');
+
+// The jump palette opens from the deck, filters, and runs the chosen entry.
+const findInside = (root, predicate) => (function find(node) {
+  if (!node || typeof node !== 'object') return null;
+  if (Array.isArray(node)) {
+    for (const item of node) {
+      const found = find(item);
+      if (found) return found;
+    }
+    return null;
+  }
+  if (node.props && predicate(node)) return node;
+  return find(node.props && node.props.children);
+})(root);
+const findPaletteInput = () => {
+  const card = findInside(tree, (node) => node.props.className === 'obs-picker obs-palette');
+  if (!card) return null;
+  return findInside(card, (node) => node.type === 'input');
+};
+
+tree = paint(props, true);
+const paletteButton = findButton('跳转');
+if (!paletteButton) throw new Error('palette action missing');
+paletteButton.props.onClick();
+tree = paint(props, false);
+if (!render(tree).includes('输入以筛选')) throw new Error('palette did not open');
+const paletteInput = findPaletteInput();
+if (!paletteInput) throw new Error('palette input missing');
+paletteInput.props.onChange({ target: { value: '旧会话' } });
+tree = paint(props, false);
+const filteredInput = findPaletteInput();
+if (!filteredInput) throw new Error('palette input lost after filtering');
+const beforePaletteRun = calls.filter((call) => call[0] === 'openSession').length;
+filteredInput.props.onKeyDown({ key: 'Enter', preventDefault() {} });
+tree = paint(props, false);
+if (calls.filter((call) => call[0] === 'openSession').length <= beforePaletteRun) {
+  throw new Error('palette Enter did not open the filtered session');
+}
+
+// The two preference toggles flip their labels.
+tree = paint(props, true);
+const tintButton = findButton('跟随心情');
+if (!tintButton) throw new Error('mood tint toggle missing');
+tintButton.props.onClick();
+tree = paint(props, false);
+if (!render(tree).includes('跟随心情：开')) throw new Error('mood tint toggle did not flip');
+
+const autoLandButton = findButton('开机落在这里');
+if (!autoLandButton) throw new Error('auto-land toggle missing');
+autoLandButton.props.onClick();
+tree = paint(props, false);
+if (!render(tree).includes('开机落在这里：关')) throw new Error('auto-land toggle did not flip');
 
 // New session must ask for a workspace first, then start in it.
 tree = paint(props, true);
