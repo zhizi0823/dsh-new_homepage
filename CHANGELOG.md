@@ -100,6 +100,8 @@
 
 - 开源：采用 **MIT License**（新增 `LICENSE`，`package.json` 标注 `"license": "MIT"` 并纳入发布文件，README 补许可说明与徽章）。版本号与构建号均未变更。
 - 文档：README 里「首页排序条数」的示例从 `slice(0, 8)` 更正为 `slice(0, 12)`。
+- 徽章：README 顶部加一排（powered by dsh / version / license / platform / tests / last-commit），全部指向真实数据源。
+- CI：新增 `.github/workflows/test.yml`，push 到 `main`、PR、手动触发时用 Node 22 跑 `test/audit.mjs` 与 `test/smoke.cjs`；`tests` 徽章读的就是它。
 
 ### 计划
 

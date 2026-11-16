@@ -4,7 +4,12 @@
 
 当前版本 **1.2.0**（内部构建号 3）。变更记录见 [CHANGELOG.md](CHANGELOG.md)。
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![](https://img.shields.io/badge/powered_by-dsh-4D6BFE?style=flat-square&logo=deepseek&logoColor=white)](https://github.com/deepseek-ai/deepseek-harness)
+[![](https://img.shields.io/github/v/release/zhizi0823/dsh-new_homepage?style=flat-square&label=version)](https://github.com/zhizi0823/dsh-new_homepage/releases)
+[![](https://img.shields.io/github/license/zhizi0823/dsh-new_homepage?style=flat-square)](LICENSE)
+[![](https://img.shields.io/badge/platform-DSH%20Web-4D6BFE?style=flat-square)](https://github.com/deepseek-ai/deepseek-harness)
+[![](https://img.shields.io/github/actions/workflow/status/zhizi0823/dsh-new_homepage/test.yml?branch=main&style=flat-square&label=tests)](https://github.com/zhizi0823/dsh-new_homepage/actions)
+[![](https://img.shields.io/github/last-commit/zhizi0823/dsh-new_homepage?style=flat-square)](https://github.com/zhizi0823/dsh-new_homepage/commits/main)
 
 ![插件图标](icon.svg)
 
@@ -171,6 +176,8 @@ node test/smoke.cjs   # 替身 React 单遍渲染：注册、会话列表、点�
 
 `smoke.cjs` 用一套极小的 React 替身跑整棵树，不需要浏览器、不碰 DSH，几毫秒出结果。
 两者都通过之后再刷新页面看效果。
+
+CI 在 [.github/workflows/test.yml](.github/workflows/test.yml)：每次 push 到 `main`、提 PR 或手动触发时，用 Node 22 跑上面这两条，README 顶部的 `tests` 徽章就是它的状态。
 
 ### 改哪里
 
